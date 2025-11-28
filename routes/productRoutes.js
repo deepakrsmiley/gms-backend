@@ -17,8 +17,9 @@ router.post("/", upload.single("image"), async (req, res) => {
 
     // FIX: Use full URL so frontend (port 5500) can access images
     const imageUrl = req.file
-      ? `http://localhost:5000/uploads/${req.file.filename}`
-      : req.body.img;
+  ? `${process.env.BASE_URL}/uploads/${req.file.filename}`
+  : req.body.img;
+
 
     const item = await Product.create({
       name,
