@@ -1,29 +1,57 @@
 import multer from "multer";
-import path from "path";
-import { fileURLToPath } from "url";
+import { v2 as cloudinary } from "cloudinary";
 import fs from "fs";
 
-// Fix __dirname in ES modules
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+// -------------------------------
+// 1. Configure Cloudinary
+// -------------------------------
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
 
-// Absolute path to uploads folder
-const uploadPath = path.join(__dirname, "../public/uploads");
-
-// Create folder if not exists
-if (!fs.existsSync(uploadPath)) {
-    fs.mkdirSync(uploadPath, { recursive: true });
-}
-
+// -------------------------------
+// 2. Multer Storage (temp only)
+// -------------------------------
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, uploadPath);
+    cb(null, "temp/"); // temporary folder
   },
   filename: (req, file, cb) => {
-    cb(null, Date.now() + path.extname(file.originalname));
+    cb(null, Date.now() + "-" + file.originalname);
   }
 });
 
 const upload = multer({ storage });
+
+// -------------------------------
+// 3. Function to Upload to Cloudinary
+// -------------------------------
+export const uploadToCloudinary = async (req, res, next) => {
+  try {
+    if (!req.file) {
+      return next();
+    }
+
+    const tempPath = req.file.path;
+
+    // Upload image to Cloudinary
+    const result = await cloudinary.uploader.upload(tempPath, {
+      folder: "products",
+    });
+
+    // Save Cloudinary URL to request
+    req.imageUrl = result.secure_url;
+
+    // Delete temp file
+    fs.unlinkSync(tempPath);
+
+    next();
+  } catch (err) {
+    console.error("Cloudinary upload error:", err);
+    res.status(500).json({ error: "Image upload failed" });
+  }
+};
 
 export default upload;
