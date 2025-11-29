@@ -1,45 +1,64 @@
+import fs from "fs";
+import path from "path";
 import mongoose from "mongoose";
 import Product from "./models/Product.js";
+import { v2 as cloudinary } from "cloudinary";
 import dotenv from "dotenv";
 
-dotenv.config({ path: "./.env" }); // ensure env is loaded
+// 👉 Load .env safely (important)
+dotenv.config({ path: path.resolve("./.env") });
 
-const OLD_BASE = "http://localhost:5000";
-const NEW_BASE = "https://gms-backend-4625.onrender.com";
+// ---- Cloudinary Config ----
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
 
-async function fixImageUrls() {
+// ---- MongoDB Connection ----
+mongoose.connect(process.env.MONGO_URI)
+  .then(() => console.log("MongoDB connected"))
+  .catch(err => console.error("DB Error:", err));
+
+const uploadsPath = path.join(process.cwd(), "public", "uploads");
+
+async function migrateImages() {
   try {
-    if (!process.env.MONGO_URL) {
-      throw new Error("❌ MONGO_URL is missing in .env file!");
+    const products = await Product.find();
+
+    for (const product of products) {
+      if (product.img?.includes("cloudinary.com")) {
+        console.log(`Skipping (already cloudinary): ${product.name}`);
+        continue;
+      }
+
+      const fileName = product.img.split("/").pop();
+      const localFilePath = path.join(uploadsPath, fileName);
+
+      if (!fs.existsSync(localFilePath)) {
+        console.log(`❌ File missing locally: ${fileName}`);
+        continue;
+      }
+
+      console.log(`Uploading: ${fileName}`);
+
+      const uploadResult = await cloudinary.uploader.upload(localFilePath, {
+        folder: "gms-products",
+      });
+
+      product.img = uploadResult.secure_url;
+      await product.save();
+
+      console.log(`✅ Updated: ${product.name}`);
     }
 
-    // Connect to database
-    await mongoose.connect(process.env.MONGO_URL, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-    });
+    console.log("🔥 Migration Complete!");
+    process.exit();
 
-    console.log("✅ DB Connected successfully");
-
-    // Find all products that have old localhost URLs
-    const products = await Product.find({ img: { $regex: OLD_BASE } });
-
-    console.log(`🔍 Found ${products.length} products to update`);
-
-    // Update each product's image URL
-    for (let p of products) {
-      const newImg = p.img.replace(OLD_BASE, NEW_BASE);
-      p.img = newImg;
-      await p.save();
-      console.log(`✔ Updated: ${p.name}`);
-    }
-
-    console.log("🎉 All image URLs updated successfully!");
-    process.exit(0);
   } catch (err) {
-    console.error("❌ Error:", err);
-    process.exit(1);
+    console.error("Error:", err);
+    process.exit();
   }
 }
 
-fixImageUrls();
+migrateImages();
