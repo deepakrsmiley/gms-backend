@@ -17,11 +17,19 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // ----------- MIDDLEWARE -----------
-app.use(cors());
-app.use(express.json({ limit: '10mb' }));
+app.use(cors({
+    origin: [
+        "https://transcendent-mandazi-edb195.netlify.app",  // your Netlify domain
+        "https://yourdomain.com"                           // your personal domain
+    ],
+    methods: "GET,POST,PUT,DELETE",
+    credentials: true
+}));
 
-// ---------- SERVE UPLOADED IMAGES ----------
-app.use('/uploads', express.static(path.join(__dirname, 'public/uploads')));
+app.use(express.json({ limit: "10mb" }));
+
+// ----------- SERVE UPLOADED IMAGES -----------
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // ----------- MULTER CONFIG (UPLOADS) -----------
 import multer from 'multer';

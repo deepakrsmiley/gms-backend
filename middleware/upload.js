@@ -2,22 +2,9 @@ import multer from "multer";
 import { v2 as cloudinary } from "cloudinary";
 import fs from "fs";
 
-// -------------------------------
-// 1. Configure Cloudinary
-// -------------------------------
-cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET,
-});
-
-// -------------------------------
-// 2. Multer Storage (temp only)
-// -------------------------------
+// ---------- MULTER TEMP STORAGE ----------
 const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, "temp/"); // temporary folder
-  },
+  destination: "/tmp",        // IMPORTANT for Render
   filename: (req, file, cb) => {
     cb(null, Date.now() + "-" + file.originalname);
   }
@@ -25,32 +12,40 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage });
 
-// -------------------------------
-// 3. Function to Upload to Cloudinary
-// -------------------------------
+// ---------- CLOUDINARY CONFIG ----------
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET
+});
+
+// ---------- CLOUDINARY UPLOAD MIDDLEWARE ----------
 export const uploadToCloudinary = async (req, res, next) => {
   try {
     if (!req.file) {
-      return next();
+      return res.status(400).json({ error: "No file uploaded" });
     }
 
-    const tempPath = req.file.path;
+    const filePath = req.file.path;
 
-    // Upload image to Cloudinary
-    const result = await cloudinary.uploader.upload(tempPath, {
-      folder: "products",
+    const uploaded = await cloudinary.uploader.upload(filePath, {
+      folder: "gms_products"
     });
 
-    // Save Cloudinary URL to request
-    req.imageUrl = result.secure_url;
+    req.imageUrl = uploaded.secure_url;
 
-    // Delete temp file
-    fs.unlinkSync(tempPath);
+    // remove temp file (only if exists)
+    if (fs.existsSync(filePath)) {
+      fs.unlinkSync(filePath);
+    }
 
     next();
+
   } catch (err) {
-    console.error("Cloudinary upload error:", err);
-    res.status(500).json({ error: "Image upload failed" });
+    return res.status(500).json({
+      error: "Cloudinary upload failed",
+      details: err.message
+    });
   }
 };
 

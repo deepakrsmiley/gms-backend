@@ -4,46 +4,29 @@ import upload, { uploadToCloudinary } from "../middleware/upload.js";
 
 const router = express.Router();
 
-// get all products
-router.get("/", async (req, res) => {
-  try {
-    const products = await Product.find();
-    res.json(products);
-  } catch (error) {
-    res.status(500).json({ error: "Failed to fetch products" });
-  }
-});
+router.post(
+  "/",
+  upload.single("image"),   // Step 1: Multer uploads to /tmp
+  uploadToCloudinary,       // Step 2: Cloudinary uploads online
+  async (req, res) => {     // Step 3: Save product
+    try {
+      const { name, desc, price, category } = req.body;
 
-// add new product (with Cloudinary upload)
-router.post("/", upload.single("image"), uploadToCloudinary, async (req, res) => {
-  try {
-    const { name, desc, price, categoryId, features } = req.body;
+      const newProduct = new Product({
+        name,
+        desc,
+        price,
+        category,
+        image: req.imageUrl // Cloudinary uploaded URL
+      });
 
-    // Cloudinary URL comes from middleware
-    const imageUrl = req.imageUrl;
+      await newProduct.save();
 
-    if (!imageUrl) {
-      return res.status(400).json({ error: "Image upload failed" });
+      res.json({ message: "Product added", product: newProduct });
+    } catch (err) {
+      res.status(500).json({ error: "Failed to add product", details: err });
     }
-
-    const item = await Product.create({
-      name,
-      desc,
-      img: imageUrl,      // IMPORTANT: stored from Cloudinary
-      price,
-      features: features || [],
-      categoryId
-    });
-
-    res.json({
-      message: "Product added successfully",
-      product: item
-    });
-
-  } catch (e) {
-    res.status(500).json({ error: e.message });
-    
   }
-});
+);
 
 export default router;
