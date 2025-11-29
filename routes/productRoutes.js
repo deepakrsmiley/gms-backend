@@ -10,15 +10,16 @@ router.post(
   uploadToCloudinary,
   async (req, res) => {
     try {
-      const { name, desc, price, categoryid } = req.body;
+      const { name, desc, price, category } = req.body;
 
-      const product = new Product({
-        name,
-        desc,
-        price,
-        categoryid,
-        image: req.imageUrl  // <-- IMPORTANT: CLOUDINARY URL
-      });
+const product = new Product({
+  name,
+  desc,
+  price,
+  category,
+  image: req.imageUrl
+});
+
 
       await product.save();
       res.json({ success: true, product });
