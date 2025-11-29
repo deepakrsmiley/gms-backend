@@ -1,21 +1,17 @@
 import multer from "multer";
 import { v2 as cloudinary } from "cloudinary";
-import streamifier from "streamifier";
 
-// ---- Use Memory Storage (IMPORTANT for Netlify) ----
-const storage = multer({
-  storage: multer.memoryStorage(),
-});
-
-export const upload = storage;
+// Use memory storage (NO FILESYSTEM NEEDED)
+const storage = multer.memoryStorage();
+const upload = multer({ storage });
 
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
   api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET,
+  api_secret: process.env.CLOUDINARY_API_SECRET
 });
 
-// ---- Upload buffer to Cloudinary ----
+// Upload using Cloudinary stream
 export const uploadToCloudinary = (req, res, next) => {
   if (!req.file) {
     return res.status(400).json({ error: "No file uploaded" });
@@ -25,9 +21,10 @@ export const uploadToCloudinary = (req, res, next) => {
     { folder: "gms_products" },
     (error, result) => {
       if (error) {
+        console.error("UPLOAD ERROR:", error);
         return res.status(500).json({
           error: "Cloudinary upload failed",
-          details: error.message,
+          details: error.message
         });
       }
 
@@ -36,5 +33,8 @@ export const uploadToCloudinary = (req, res, next) => {
     }
   );
 
-  streamifier.createReadStream(req.file.buffer).pipe(stream);
+  // pipe the file buffer to upload_stream
+  stream.end(req.file.buffer);
 };
+
+export default upload;
