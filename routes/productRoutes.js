@@ -6,25 +6,25 @@ const router = express.Router();
 
 router.post(
   "/",
-  upload.single("image"),   // Step 1: Multer uploads to /tmp
-  uploadToCloudinary,       // Step 2: Cloudinary uploads online
-  async (req, res) => {     // Step 3: Save product
+  upload.single("image"),
+  uploadToCloudinary,
+  async (req, res) => {
     try {
-      const { name, desc, price, category } = req.body;
+      const { name, desc, price, categoryid } = req.body;
 
-      const newProduct = new Product({
+      const product = new Product({
         name,
         desc,
         price,
-        category,
-        image: req.imageUrl // Cloudinary uploaded URL
+        categoryid,
+        image: req.imageUrl  // <-- IMPORTANT: CLOUDINARY URL
       });
 
-      await newProduct.save();
+      await product.save();
+      res.json({ success: true, product });
 
-      res.json({ message: "Product added", product: newProduct });
     } catch (err) {
-      res.status(500).json({ error: "Failed to add product", details: err });
+      res.status(500).json({ error: "Product upload failed", details: err.message });
     }
   }
 );
