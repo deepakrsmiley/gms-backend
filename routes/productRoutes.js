@@ -12,20 +12,26 @@ router.post(
     try {
       const { name, desc, price, category } = req.body;
 
-const product = new Product({
-  name,
-  desc,
-  price,
-  category,
-  image: req.imageUrl
-});
-
+      const product = new Product({
+        name,
+        desc,
+        price,
+        category,
+        img: req.imageUrl   // <-- IMPORTANT FIX
+      });
 
       await product.save();
-      res.json({ success: true, product });
+
+      res.json({
+        success: true,
+        product
+      });
 
     } catch (err) {
-      res.status(500).json({ error: "Product upload failed", details: err.message });
+      res.status(500).json({
+        error: "Product upload failed",
+        details: err.message
+      });
     }
   }
 );
