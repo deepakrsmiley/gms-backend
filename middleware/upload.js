@@ -33,6 +33,7 @@ export const uploadToCloudinary = (req, res, next) => {
     }
   );
 
+  // pipe the file buffer to upload_stream
   stream.end(req.file.buffer);
 };
 

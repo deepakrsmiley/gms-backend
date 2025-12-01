@@ -3,7 +3,8 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "start": "node server.js"
+    "start": "nodemon server.js",
+    "seed": "node server.js"
   },
   "dependencies": {
     "cloudinary": "^1.41.0",

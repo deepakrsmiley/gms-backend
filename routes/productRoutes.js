@@ -17,7 +17,7 @@ router.post(
         desc,
         price,
         category,
-        img: req.imageUrl
+        img: req.imageUrl   // <-- IMPORTANT FIX
       });
 
       await product.save();
