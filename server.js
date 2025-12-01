@@ -19,7 +19,8 @@ const __dirname = path.dirname(__filename);
 app.use(cors({
     origin: [
         "https://transcendent-mandazi-edb195.netlify.app",
-        "https://yourdomain.com"
+        "https://globalenterpris.com",
+        "https://www.globalenterpris.com"
     ],
     methods: ["GET", "POST", "PUT", "DELETE"],
     credentials: true
