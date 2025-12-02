@@ -4,6 +4,13 @@ import upload, { uploadToCloudinary } from "../middleware/upload.js";
 
 const router = express.Router();
 
+// GET all products
+router.get("/", async (req, res) => {
+  const products = await Product.find();
+  res.json(products);
+});
+
+// ADD new product
 router.post(
   "/",
   upload.single("image"),
@@ -16,16 +23,13 @@ router.post(
         name,
         desc,
         price,
-        category,
-        img: req.imageUrl   // <-- IMPORTANT FIX
+        category, // FIXED field
+        img: req.imageUrl
       });
 
       await product.save();
 
-      res.json({
-        success: true,
-        product
-      });
+      res.json({ success: true, product });
 
     } catch (err) {
       res.status(500).json({

@@ -6,7 +6,7 @@ const ProductSchema = new mongoose.Schema({
   img: String,
   price: Number,
   features: { type: [String], default: [] },
-  categoryId: { type: mongoose.Schema.Types.ObjectId, ref: "Category" }
+  category: { type: String, required: true } // FIXED
 });
 
 export default mongoose.model("Product", ProductSchema);
