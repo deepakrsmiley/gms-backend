@@ -18,12 +18,15 @@ const __dirname = path.dirname(__filename);
 // ----------- CORS -----------
 app.use(cors({
     origin: [
-        "https://transcendent-mandazi-edb195.netlify.app",
-        "https://yourdomain.com"
+        "http://127.0.0.1:5500",
+        "http://localhost:5500",
+        "https://transcendent-mandazi-edb195.netlify.app"
     ],
     methods: ["GET", "POST", "PUT", "DELETE"],
+    allowedHeaders: ["Content-Type", "Authorization"],
     credentials: true
 }));
+
 
 app.use(express.json({ limit: "10mb" }));
 
