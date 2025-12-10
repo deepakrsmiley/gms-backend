@@ -1,35 +1,29 @@
 import express from "express";
 import Product from "../models/Product.js";
-import { upload } from "../config/cloudinary.js";
+import upload from "../middleware/upload.js";
 
 const router = express.Router();
 
-// GET ALL PRODUCTS
-router.get("/", async (req, res) => {
-  const products = await Product.find();
-  res.json(products);
-});
-
-// ADD PRODUCT
+// GET all products
 router.post("/", upload.single("image"), async (req, res) => {
   try {
-    const { name, desc, price, category } = req.body;
+    const { name, desc, price, mrp, categoryId } = req.body;
 
-    const product = new Product({
+    const newProduct = new Product({
       name,
       desc,
       price,
-      category,
-      image: req.file.path // Cloudinary URL
+      mrp,              // <<<<<< ADD THIS
+      img: req.file ? req.file.path : "",
+      categoryId
     });
 
-    await product.save();
-    res.json({ success: true, product });
+    await newProduct.save();
+    res.json(newProduct);
 
-  } catch (error) {
-    console.log(error);
-    res.status(500).json({ error: "Server Error" });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to add product" });
   }
 });
 
-export default router;

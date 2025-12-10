@@ -4,8 +4,11 @@ const productSchema = new mongoose.Schema({
   name: String,
   desc: String,
   price: Number,
-  image: String,
-  category: String
+  mrp: Number,          // <<<< ADD THIS
+  img: String,
+  categoryId: mongoose.Schema.Types.ObjectId,
+  features: Array
 });
 
-export default mongoose.model("Product", productSchema);
+
+export default mongoose.model("Product", ProductSchema);
