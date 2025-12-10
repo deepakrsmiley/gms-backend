@@ -12,6 +12,9 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+// 👉 IMPORTANT: Serve uploaded images
+app.use("/uploads", express.static("uploads"));
+
 // Routes
 app.use("/api/products", productRoutes);
 app.use("/api/categories", categoryRoutes);

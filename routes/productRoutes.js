@@ -4,7 +4,7 @@ import upload from "../middleware/upload.js";
 
 const router = express.Router();
 
-// GET all products
+// ADD PRODUCT
 router.post("/", upload.single("image"), async (req, res) => {
   try {
     const { name, desc, price, mrp, categoryId } = req.body;
@@ -13,8 +13,8 @@ router.post("/", upload.single("image"), async (req, res) => {
       name,
       desc,
       price,
-      mrp,              // <<<<<< ADD THIS
-      img: req.file ? req.file.path : "",
+      mrp,
+      img: req.file?.path || req.file?.secure_url || "",
       categoryId
     });
 
@@ -27,3 +27,25 @@ router.post("/", upload.single("image"), async (req, res) => {
   }
 });
 
+// GET PRODUCTS
+router.get("/", async (req, res) => {
+  try {
+    const products = await Product.find();
+    res.json(products);
+  } catch (err) {
+    res.status(500).json({ error: "Failed to fetch products" });
+  }
+});
+
+// DELETE PRODUCT
+router.delete("/:id", async (req, res) => {
+  try {
+    await Product.findByIdAndDelete(req.params.id);
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: "Failed to delete product" });
+  }
+});
+
+// IMPORTANT EXPORT
+export default router;
