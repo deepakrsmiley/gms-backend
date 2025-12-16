@@ -30,4 +30,8 @@ app.listen(port, () => console.log("Server running on port", port));
 app.get("/", (req, res) => {
   res.send("Backend running correctly");
 });
+// ---------- HEALTH CHECK (Render keep-alive) ----------
+app.get("/health", (req, res) => {
+  res.status(200).send("OK");
+});
 
