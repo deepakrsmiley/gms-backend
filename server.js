@@ -34,4 +34,27 @@ app.get("/", (req, res) => {
 app.get("/health", (req, res) => {
   res.status(200).send("OK");
 });
+app.get("/sitemap.xml", async (req, res) => {
+  const Product = (await import("./models/Product.js")).default;
+  const products = await Product.find({}, "_id name");
+
+  const urls = products.map(p => {
+    const slug = p.name.toLowerCase().replace(/[^a-z0-9]+/g, "-");
+    return `
+      <url>
+        <loc>https://globalenterpris.com/product/${slug}?id=${p._id}</loc>
+      </url>`;
+  }).join("");
+
+  res.header("Content-Type", "application/xml");
+  res.send(`
+    <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+      <url><loc>https://globalenterpris.com/</loc></url>
+      <url><loc>https://globalenterpris.com/category/cpap</loc></url>
+      <url><loc>https://globalenterpris.com/category/bipap</loc></url>
+      ${urls}
+    </urlset>
+  `);
+});
+
 
